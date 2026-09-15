@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/back_app_bar.dart';
+import '../../widgets/gradient_icon_badge.dart';
+import '../../widgets/primary_button.dart';
 import 'create_pin_screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -74,16 +77,7 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      appBar: const BackAppBar(),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -91,25 +85,11 @@ class _OtpScreenState extends State<OtpScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.sms_outlined,
-                    color: AppColors.accent, size: 26),
-              ),
+              const GradientIconBadge(Icons.sms_outlined),
               const SizedBox(height: 32),
               const Text(
                 'Code de vérification',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
@@ -120,7 +100,6 @@ class _OtpScreenState extends State<OtpScreen> {
                 TextSpan(
                   text: 'Entrez le code envoyé au\n',
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
                     fontSize: 15,
                     color: AppColors.textSecondary,
                     height: 1.4,
@@ -157,7 +136,6 @@ class _OtpScreenState extends State<OtpScreen> {
                         FilteringTextInputFormatter.digitsOnly,
                       ],
                       style: const TextStyle(
-                        fontFamily: 'Manrope',
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -199,7 +177,6 @@ class _OtpScreenState extends State<OtpScreen> {
                     ? Text(
                         'Renvoyer le code dans 0:${_secondsLeft.toString().padLeft(2, '0')}',
                         style: const TextStyle(
-                          fontFamily: 'Manrope',
                           fontSize: 14,
                           color: AppColors.textSecondary,
                         ),
@@ -209,7 +186,6 @@ class _OtpScreenState extends State<OtpScreen> {
                         child: const Text(
                           'Renvoyer le code',
                           style: TextStyle(
-                            fontFamily: 'Manrope',
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary,
@@ -220,31 +196,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
               const Spacer(),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _code.length == 4 ? _verify : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    disabledBackgroundColor:
-                        AppColors.primary.withValues(alpha: 0.25),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Vérifier',
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+              PrimaryButton(
+                label: 'Vérifier',
+                onPressed: _code.length == 4 ? _verify : null,
               ),
               const SizedBox(height: 24),
             ],

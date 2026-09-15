@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/accent_title.dart';
+import '../../widgets/gradient_icon_badge.dart';
+import '../../widgets/primary_button.dart';
 import 'otp_screen.dart';
 import 'login_screen.dart';
 
@@ -94,7 +97,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                 child: Text(
                   'Choisir un pays',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -109,7 +111,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                 title: Text(
                   c.name,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textPrimary,
@@ -118,7 +119,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                 trailing: Text(
                   c.dialCode,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
                     fontSize: 15,
                     color: AppColors.textSecondary,
                   ),
@@ -147,7 +147,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -155,28 +154,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
-              // Logo
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.smartphone_rounded,
-                    color: AppColors.accent, size: 28),
-              ),
+              const GradientIconBadge(Icons.smartphone_rounded),
               const SizedBox(height: 32),
               // Badge inscription rapide
               Container(
@@ -193,7 +171,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                     Text(
                       'Inscription en 30 secondes',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: AppColors.accentDark,
@@ -203,41 +180,16 @@ class _PhoneScreenState extends State<PhoneScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Text.rich(
-                const TextSpan(
-                  text: 'Bienvenue ',
-                  style: TextStyle(
-                    fontFamily: 'Manrope',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    height: 1.2,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: 'à bord',
-                      style: TextStyle(color: AppColors.accentDark),
-                    ),
-                    TextSpan(text: ' 👋'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: 44,
-                height: 4,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.accent, AppColors.accentLight],
-                  ),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+              const AccentTitle(
+                text: 'Bienvenue ',
+                accent: 'à bord',
+                suffix: ' 👋',
+                fontSize: 28,
               ),
               const SizedBox(height: 12),
               const Text(
                 'Pour commencer, inscrivez-vous avec votre numéro de téléphone. Aucun mot de passe à retenir.',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
                   fontSize: 15,
                   color: AppColors.textSecondary,
                   height: 1.5,
@@ -264,7 +216,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                           Text(
                             _country.dialCode,
                             style: const TextStyle(
-                              fontFamily: 'Manrope',
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -288,7 +239,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                         _PhoneNumberFormatter(),
                       ],
                       style: const TextStyle(
-                        fontFamily: 'Manrope',
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -297,7 +247,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                       decoration: InputDecoration(
                         hintText: '77 123 45 67',
                         hintStyle: const TextStyle(
-                          fontFamily: 'Manrope',
                           color: AppColors.muted,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 1,
@@ -328,31 +277,9 @@ class _PhoneScreenState extends State<PhoneScreen> {
 
               const Spacer(),
 
-              // Bouton continuer
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isValid ? _continue : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.25),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Continuer',
-                    style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+              PrimaryButton(
+                label: 'Continuer',
+                onPressed: _isValid ? _continue : null,
               ),
               const SizedBox(height: 16),
               // Lien connexion
@@ -368,7 +295,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                     TextSpan(
                       text: 'Vous avez déjà un compte ? ',
                       style: const TextStyle(
-                        fontFamily: 'Manrope',
                         fontSize: 14,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
@@ -377,7 +303,6 @@ class _PhoneScreenState extends State<PhoneScreen> {
                         TextSpan(
                           text: 'Se connecter',
                           style: TextStyle(
-                            fontFamily: 'Manrope',
                             fontSize: 14,
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
