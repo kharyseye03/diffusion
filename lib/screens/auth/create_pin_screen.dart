@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/network/api_call_mixin.dart';
+import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/back_app_bar.dart';
 import '../../widgets/gradient_icon_badge.dart';
@@ -8,14 +11,17 @@ import 'login_screen.dart';
 
 enum _PinStep { create, confirm, biometric }
 
-class CreatePinScreen extends StatefulWidget {
-  const CreatePinScreen({super.key});
+class CreatePinScreen extends ConsumerStatefulWidget {
+  final String phoneNumber;
+
+  const CreatePinScreen({super.key, required this.phoneNumber});
 
   @override
-  State<CreatePinScreen> createState() => _CreatePinScreenState();
+  ConsumerState<CreatePinScreen> createState() => _CreatePinScreenState();
 }
 
-class _CreatePinScreenState extends State<CreatePinScreen> {
+class _CreatePinScreenState extends ConsumerState<CreatePinScreen>
+    with ApiCallMixin {
   _PinStep _step = _PinStep.create;
   String _firstPin = '';
 
@@ -28,7 +34,9 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
       return null;
     }
     if (pin != _firstPin) return 'Les codes ne correspondent pas';
-    setState(() => _step = _PinStep.biometric);
+    final ok = await callApi(
+        () => ref.read(authServiceProvider).createPin(widget.phoneNumber, pin));
+    if (ok && mounted) setState(() => _step = _PinStep.biometric);
     return null;
   }
 

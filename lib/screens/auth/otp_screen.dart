@@ -1,24 +1,38 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/network/api_call_mixin.dart';
+import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/back_app_bar.dart';
 import '../../widgets/gradient_icon_badge.dart';
 import '../../widgets/primary_button.dart';
 import 'create_pin_screen.dart';
 
-class OtpScreen extends StatefulWidget {
+class OtpScreen extends ConsumerStatefulWidget {
+  /// Numéro envoyé à l'API (chiffres uniquement).
   final String phoneNumber;
-  const OtpScreen({super.key, required this.phoneNumber});
+
+  /// Numéro formaté affiché à l'utilisateur.
+  final String displayNumber;
+
+  const OtpScreen({
+    super.key,
+    required this.phoneNumber,
+    required this.displayNumber,
+  });
 
   @override
-  State<OtpScreen> createState() => _OtpScreenState();
+  ConsumerState<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
-  final List<TextEditingController> _controllers =
-      List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+class _OtpScreenState extends ConsumerState<OtpScreen> with ApiCallMixin {
+  static const _codeLength = 6;
+
+  final _controllers =
+      List.generate(_codeLength, (_) => TextEditingController());
+  final _focusNodes = List.generate(_codeLength, (_) => FocusNode());
   int _secondsLeft = 30;
   Timer? _timer;
 
@@ -55,23 +69,43 @@ class _OtpScreenState extends State<OtpScreen> {
   String get _code => _controllers.map((c) => c.text).join();
 
   void _onChanged(String value, int index) {
-    if (value.isNotEmpty && index < 3) {
+    if (value.isNotEmpty && index < _codeLength - 1) {
       _focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
     setState(() {});
-    if (_code.length == 4) {
+    if (_code.length == _codeLength) {
       FocusScope.of(context).unfocus();
-      Future.delayed(const Duration(milliseconds: 300), _verify);
+      _verify();
     }
   }
 
-  void _verify() {
+  Future<void> _verify() async {
+    final ok = await callApi(() =>
+        ref.read(authServiceProvider).verifyOtp(widget.phoneNumber, _code));
+    if (!mounted) return;
+    if (!ok) {
+      setState(() {
+        for (final c in _controllers) {
+          c.clear();
+        }
+      });
+      _focusNodes.first.requestFocus();
+      return;
+    }
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CreatePinScreen()),
+      MaterialPageRoute(
+        builder: (_) => CreatePinScreen(phoneNumber: widget.phoneNumber),
+      ),
     );
+  }
+
+  Future<void> _resend() async {
+    final ok = await callApi(
+        () => ref.read(authServiceProvider).resendOtp(widget.phoneNumber));
+    if (ok && mounted) setState(_startTimer);
   }
 
   @override
@@ -106,7 +140,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                   children: [
                     TextSpan(
-                      text: widget.phoneNumber,
+                      text: widget.displayNumber,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -119,51 +153,52 @@ class _OtpScreenState extends State<OtpScreen> {
 
               // Cases OTP
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(4, (index) {
+                spacing: 8,
+                children: List.generate(_codeLength, (index) {
                   final filled = _controllers[index].text.isNotEmpty;
-                  return SizedBox(
-                    width: 64,
-                    height: 68,
-                    child: TextField(
-                      controller: _controllers[index],
-                      focusNode: _focusNodes[index],
-                      autofocus: index == 0,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                      decoration: InputDecoration(
-                        counterText: '',
-                        filled: true,
-                        fillColor: filled
-                            ? AppColors.primary.withValues(alpha: 0.05)
-                            : AppColors.background,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
+                  return Expanded(
+                    child: SizedBox(
+                      height: 60,
+                      child: TextField(
+                        controller: _controllers[index],
+                        focusNode: _focusNodes[index],
+                        autofocus: index == 0,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        maxLength: 1,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: filled ? AppColors.primary : Colors.transparent,
-                            width: 1.5,
+                        decoration: InputDecoration(
+                          counterText: '',
+                          filled: true,
+                          fillColor: filled
+                              ? AppColors.primary.withValues(alpha: 0.05)
+                              : AppColors.background,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: filled ? AppColors.primary : Colors.transparent,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: AppColors.primary, width: 2),
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide:
-                              const BorderSide(color: AppColors.primary, width: 2),
-                        ),
+                        onChanged: (v) => _onChanged(v, index),
                       ),
-                      onChanged: (v) => _onChanged(v, index),
                     ),
                   );
                 }),
@@ -182,7 +217,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                       )
                     : TextButton(
-                        onPressed: _startTimer,
+                        onPressed: isLoading ? null : _resend,
                         child: const Text(
                           'Renvoyer le code',
                           style: TextStyle(
@@ -198,7 +233,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
               PrimaryButton(
                 label: 'Vérifier',
-                onPressed: _code.length == 4 ? _verify : null,
+                onPressed: _code.length == _codeLength ? _verify : null,
+                isLoading: isLoading,
               ),
               const SizedBox(height: 24),
             ],

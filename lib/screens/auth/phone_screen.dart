@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/network/api_call_mixin.dart';
+import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/accent_title.dart';
 import '../../widgets/gradient_icon_badge.dart';
@@ -42,14 +45,14 @@ const List<Country> kCountries = [
   Country('France', '🇫🇷', '+33'),
 ];
 
-class PhoneScreen extends StatefulWidget {
+class PhoneScreen extends ConsumerStatefulWidget {
   const PhoneScreen({super.key});
 
   @override
-  State<PhoneScreen> createState() => _PhoneScreenState();
+  ConsumerState<PhoneScreen> createState() => _PhoneScreenState();
 }
 
-class _PhoneScreenState extends State<PhoneScreen> {
+class _PhoneScreenState extends ConsumerState<PhoneScreen> with ApiCallMixin {
   final _phoneController = TextEditingController();
   Country _country = kCountries.first;
   bool _isValid = false;
@@ -136,11 +139,19 @@ class _PhoneScreenState extends State<PhoneScreen> {
     );
   }
 
-  void _continue() {
-    final fullNumber = '${_country.dialCode} ${_phoneController.text}';
+  Future<void> _continue() async {
+    final phoneNumber = _phoneController.text.replaceAll(' ', '');
+    final ok = await callApi(
+        () => ref.read(authServiceProvider).register(phoneNumber));
+    if (!ok || !mounted) return;
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => OtpScreen(phoneNumber: fullNumber)),
+      MaterialPageRoute(
+        builder: (_) => OtpScreen(
+          phoneNumber: phoneNumber,
+          displayNumber: '${_country.dialCode} ${_phoneController.text}',
+        ),
+      ),
     );
   }
 
@@ -280,6 +291,7 @@ class _PhoneScreenState extends State<PhoneScreen> {
               PrimaryButton(
                 label: 'Continuer',
                 onPressed: _isValid ? _continue : null,
+                isLoading: isLoading,
               ),
               const SizedBox(height: 16),
               // Lien connexion
