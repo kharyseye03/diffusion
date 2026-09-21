@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# API config (URLs backend) — voir api_config.example.dart
+lib/config/api/api_config.dart
+
 # Symbolication related
 app.*.symbols
 

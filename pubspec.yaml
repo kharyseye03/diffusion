@@ -32,6 +32,10 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
+  dio: ^5.11.1
+  flutter_secure_storage: ^11.1.1
+  flutter_riverpod: ^2.6.1
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:
