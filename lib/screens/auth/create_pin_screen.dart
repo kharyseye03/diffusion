@@ -6,10 +6,10 @@ import '../../theme/app_theme.dart';
 import '../../widgets/back_app_bar.dart';
 import '../../widgets/gradient_icon_badge.dart';
 import '../../widgets/pin_input.dart';
-import '../../widgets/primary_button.dart';
+import 'biometric_screen.dart';
 import 'login_screen.dart';
 
-enum _PinStep { create, confirm, biometric }
+enum _PinStep { create, confirm }
 
 class CreatePinScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
@@ -36,8 +36,24 @@ class _CreatePinScreenState extends ConsumerState<CreatePinScreen>
     if (pin != _firstPin) return 'Les codes ne correspondent pas';
     final ok = await callApi(
         () => ref.read(authServiceProvider).createPin(widget.phoneNumber, pin));
-    if (ok && mounted) setState(() => _step = _PinStep.biometric);
+    if (ok) await _finish(pin);
     return null;
+  }
+
+  /// Vers le login, en proposant la biométrie si l'appareil la gère.
+  Future<void> _finish(String pin) async {
+    final canUseBiometric =
+        await ref.read(biometricServiceProvider).isAvailable;
+    if (!mounted) return;
+    final login = LoginScreen(phoneNumber: widget.phoneNumber);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            canUseBiometric ? BiometricScreen(pin: pin, next: login) : login,
+      ),
+      (_) => false,
+    );
   }
 
   void _onBack() {
@@ -51,20 +67,8 @@ class _CreatePinScreenState extends ConsumerState<CreatePinScreen>
     }
   }
 
-  void _finish() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (_) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_step == _PinStep.biometric) {
-      return _BiometricStep(onActivate: _finish, onSkip: _finish);
-    }
-
     final isCreate = _step == _PinStep.create;
     return Scaffold(
       appBar: BackAppBar(onBack: _onBack),
@@ -103,64 +107,6 @@ class _CreatePinScreenState extends ConsumerState<CreatePinScreen>
               child: PinInput(key: ValueKey(_step), onCompleted: _onPinCompleted),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BiometricStep extends StatelessWidget {
-  final VoidCallback onActivate;
-  final VoidCallback onSkip;
-
-  const _BiometricStep({required this.onActivate, required this.onSkip});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const Spacer(),
-              const GradientIconBadge(Icons.fingerprint_rounded, size: 96),
-              const SizedBox(height: 32),
-              const Text(
-                'Activer la biométrie',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Connectez-vous encore plus vite avec votre empreinte ou Face ID, sans saisir votre PIN.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-              const Spacer(),
-              PrimaryButton(label: 'Activer la biométrie', onPressed: onActivate),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: onSkip,
-                child: const Text(
-                  'Plus tard',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
         ),
       ),
     );

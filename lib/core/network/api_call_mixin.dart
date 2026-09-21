@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
+import '../utils/snackbar.dart';
 import 'api_exception.dart';
 
 /// Gère pour tous les écrans l'état de chargement et l'affichage des
@@ -16,13 +16,7 @@ mixin ApiCallMixin<T extends StatefulWidget> on State<T> {
       await call();
       return true;
     } on ApiException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.message),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ));
-      }
+      if (mounted) showErrorSnackBar(context, e.message);
       return false;
     } finally {
       if (mounted) setState(() => isLoading = false);

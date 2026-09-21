@@ -1,5 +1,6 @@
 package com.example.x
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// FragmentActivity requise par local_auth (biométrie).
+class MainActivity : FlutterFragmentActivity()
